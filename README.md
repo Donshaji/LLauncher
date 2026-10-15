@@ -5,6 +5,7 @@ A launcher and desktop environment for Linux ARM64 smartphone form factor device
 ## Status
 - [x] Initial project setup
 - [x] GTK4 application window scaffold
+- [x] Touch-friendly navigation bar
 - [ ] Core launcher UI
 - [ ] App management
 - [ ] System integration (display/input)
@@ -28,7 +29,7 @@ Inside the Debian proot, install the GTK4 development libraries and build tools:
 
 ```bash
 apt update
-apt install build-essential pkg-config libgtk-4-dev
+apt install build-essential pkg-config libgtk-4-dev wmctrl xdotool x11-xserver-utils
 ```
 
 Install Rust with rustup (the project uses Rust 2024 edition, which requires
@@ -50,5 +51,16 @@ cargo build
 DISPLAY=:0 GDK_BACKEND=x11 cargo run
 ```
 
-The current executable opens a simple portrait-oriented GTK4 window. The full
-launcher UI and system integration are not implemented yet.
+The bottom navigation buttons work as follows:
+
+- **Recent Apps** lists other X11 windows. Select one to make it the target for
+  **Back** and **Close App**.
+- **Home** returns to the LLauncher window.
+- **Back** activates the selected window and sends it Escape.
+- **Rotate** toggles the connected X11 display between left and right rotation.
+- **Close App** asks the selected window to close.
+
+These actions rely on `wmctrl`, `xdotool`, and `xrandr` being available in the
+Debian proot. Display rotation depends on Termux:X11 and the device supporting
+XRandR rotation; unsupported actions display an error. The full launcher home
+screen, app management, and system integration are still under development.
