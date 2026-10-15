@@ -28,48 +28,63 @@ pkg install proot-distro
 pkg install termux-widget
 ```
 
-Inside Debian, install the GTK4 development libraries and build tools:
+## Install a release
+
+Download the latest ARM64 release and install the runtime dependencies inside
+the Debian proot:
 
 ```bash
 apt update
-apt install build-essential pkg-config libgtk-4-dev wmctrl xdotool x11-xserver-utils
+apt install ca-certificates curl libgtk-4-1 wmctrl xdotool x11-xserver-utils
+cd /tmp
+curl -fL \
+  https://github.com/Donshaji/LLauncher/releases/latest/download/llauncher-aarch64-unknown-linux-gnu.tar.gz \
+  -o llauncher-aarch64-unknown-linux-gnu.tar.gz
+curl -fL \
+  https://github.com/Donshaji/LLauncher/releases/latest/download/llauncher-aarch64-unknown-linux-gnu.tar.gz.sha256 \
+  -o llauncher-aarch64-unknown-linux-gnu.tar.gz.sha256
+sha256sum -c llauncher-aarch64-unknown-linux-gnu.tar.gz.sha256
+tar -xzf llauncher-aarch64-unknown-linux-gnu.tar.gz
+install -m 755 llauncher /usr/local/bin/llauncher
 ```
 
-Install Rust with rustup (the project uses Rust 2024 edition, which requires
-Rust 1.85 or newer), then load Cargo into the shell:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
+The binary runs on 64-bit ARM Debian (AArch64) with GTK4 installed. No Rust
+toolchain is needed on the phone when installing a release.
 
 ## One-tap startup
 
-Clone this project inside Debian at `/root/LLauncher` (or edit
-`PROJECT_DIR` in `scripts/start-llauncher-termux.sh` to match its location).
-After setting up the Debian dependencies and Rust below, install the script as
-a Termux:Widget shortcut from the Termux shell:
+After installing the binary and Termux packages above, copy the startup script
+to the Termux:Widget shortcuts directory from the Termux shell:
 
 ```bash
 mkdir -p "$HOME/.shortcuts"
-proot-distro login debian -- cat /root/LLauncher/scripts/start-llauncher-termux.sh \
+curl -fL \
+  https://raw.githubusercontent.com/Donshaji/LLauncher/main/scripts/start-llauncher-termux.sh \
   > "$HOME/.shortcuts/llauncher"
 chmod +x "$HOME/.shortcuts/llauncher"
 ```
 
 Add the Termux:Widget to the Android home screen and tap **llauncher** to start
-Termux:X11, enter Debian, and run LLauncher. The first launch compiles the
-release build and can take a while; later launches reuse it.
+Termux:X11, enter Debian with shared temporary storage, and run LLauncher.
 
-## Manual build and run
+## Build from source
 
-You can also start the X11 server in Termux and run these commands inside
-Debian. The usual display is `:0`; change `DISPLAY` if needed.
+For development, install the GTK4 development packages in Debian:
+
+```bash
+apt install build-essential pkg-config libgtk-4-dev wmctrl xdotool x11-xserver-utils
+```
+
+Install Rust 1.85 or newer with rustup, then build and run inside Debian:
 
 ```bash
 cargo build
 DISPLAY=:0 GDK_BACKEND=x11 cargo run
 ```
+
+To publish a release, push a version tag such as `v0.1.0`. GitHub Actions builds
+the AArch64 Linux binary on Debian Bookworm, packages it, calculates a SHA-256
+checksum, and publishes both files on the GitHub Release.
 
 The bottom navigation buttons work as follows:
 
